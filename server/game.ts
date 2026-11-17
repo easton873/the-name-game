@@ -69,6 +69,7 @@ export class Room {
   hostSocketId: string | null = null;
   players = new Map<string, Player>();
   phase: Phase = 'lobby';
+  social = false;
 
   // ---- game state (reset by resetGame)
   private participants: string[] = [];
@@ -230,6 +231,12 @@ export class Room {
     for (const p of this.players.values()) p.secretName = null;
   }
 
+  updateSettings(patch: { social?: boolean }) {
+    if (this.phase !== 'lobby') return;
+    if (typeof patch.social === 'boolean') this.social = patch.social;
+    this.broadcast();
+  }
+
   start() {
     if (this.phase !== 'lobby') return;
     if ([...this.players.values()].filter((p) => p.socketId).length < MIN_PLAYERS) return;
@@ -290,6 +297,10 @@ export class Room {
       this.phase = 'ready';
       this.ready.clear();
       this.maybeAdvance();
+    } else if (this.social) {
+      // Social mode: that's all the game does. The players guess among themselves.
+      this.phase = 'socialOver';
+      this.clearTimer();
     } else {
       this.startPlay();
     }
@@ -475,6 +486,7 @@ export class Room {
     return {
       code: this.code,
       phase: this.phase,
+      social: this.social,
       players,
       memorize,
       play: this.playState(),

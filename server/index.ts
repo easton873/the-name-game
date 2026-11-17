@@ -91,6 +91,7 @@ io.on('connection', (socket) => {
   const asHost = (fn: (r: Room) => void) => () => {
     if (room && role === 'host') fn(room);
   };
+  socket.on('host:settings', (p) => room && role === 'host' && room.updateSettings(p ?? {}));
   socket.on('host:start', asHost((r) => r.start()));
   socket.on('host:skip', asHost((r) => r.skip()));
   socket.on('host:backToLobby', asHost((r) => r.backToLobby()));

@@ -179,7 +179,47 @@ async function main() {
   console.log(`simulation passed - winner: ${byId(hostState.winner!.id)[0]} ("${hostState.winner!.secretName}")`);
 }
 
+async function social() {
+  const host = connect();
+  const created = await emit(host, 'host:create');
+  let hs!: ClientState;
+  host.on('state', (st) => (hs = st));
+  const bots: S[] = [];
+  for (const n of ['A1', 'B2', 'C3']) {
+    const sck = connect();
+    assert.ok((await emit(sck, 'player:join', { code: created.code, name: n })).ok);
+    bots.push(sck);
+  }
+  await sleep(100);
+  host.emit('host:settings', { social: true });
+  await sleep(100);
+  assert.equal(hs.social, true);
+  host.emit('host:start');
+  await sleep(100);
+  for (const [i, b] of bots.entries()) await emit(b, 'player:submitName', { name: 'Name ' + i });
+  let passes = 0;
+  let lastPass = 0;
+  while (hs.phase !== 'socialOver') {
+    if (hs.phase === 'memorize' && hs.memorize!.pass !== lastPass) {
+      lastPass = hs.memorize!.pass;
+      passes++;
+    }
+    if (hs.phase === 'ready') for (const b of bots) b.emit('player:ready');
+    await sleep(20);
+  }
+  assert.equal(passes, 2, 'names shown twice, then the game ends');
+  await sleep(300);
+  assert.equal(hs.phase, 'socialOver', 'no guessing phase in social mode');
+  assert.equal(hs.play, null);
+  host.emit('host:backToLobby');
+  await sleep(100);
+  assert.equal(hs.phase, 'lobby');
+  assert.equal(hs.social, true, 'the setting is remembered');
+  console.log('social mode simulation passed');
+}
+
 main()
+  .then(social)
   .catch((e) => {
     console.error(e);
     process.exitCode = 1;

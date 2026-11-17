@@ -19,6 +19,8 @@ Themed like early-writing practice sheets: ruled paper (blue top line, dotted mi
 
 The big screen shows whose turn it is (teammates smaller on either side), announces each guess and whether it was right for 10 seconds, and the host can press **Skip** (or space) to move on if a player's phone dropped.
 
+**Social mode** (checkbox in the host lobby): everyone writes a name and the big screen shows all the names twice as usual, then the game just ends and the group plays the guessing part themselves, out loud.
+
 ### Status
 
 - [x] Pencil-and-paper theme

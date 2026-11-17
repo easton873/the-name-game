@@ -388,6 +388,14 @@ function playView(s: ClientState): View {
   };
 }
 
+function socialOverView(s: ClientState): View {
+  const mine = byId(s, s.you?.id);
+  return {
+    header: header('Social mode', 'Now you play!'),
+    main: centerView('Your turn to play!', 'You have seen every name twice. Take turns guessing who wrote what — out loud, with your friends.', '', mine?.color),
+  };
+}
+
 function overView(s: ClientState): View {
   const w = s.winner;
   const mine = byId(s, s.you?.id);
@@ -442,6 +450,9 @@ function render(force = false) {
         break;
       case 'play':
         v = playView(state);
+        break;
+      case 'socialOver':
+        v = socialOverView(state);
         break;
       default:
         v = overView(state);

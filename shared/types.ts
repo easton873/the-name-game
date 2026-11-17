@@ -6,7 +6,8 @@ export type Phase =
   | 'memorize' // the big screen shows every name, 4 seconds each (pass 1, then pass 2)
   | 'ready' // break between the two passes: everybody taps Ready on their phone
   | 'play' // teams take turns guessing who wrote which name
-  | 'gameOver';
+  | 'gameOver'
+  | 'socialOver'; // social mode: the names have been shown twice and the players take it from here
 
 export const MIN_PLAYERS = 3;
 export const MAX_PLAYER_NAME_LENGTH = 14;
@@ -100,6 +101,8 @@ export interface YouInfo {
 export interface ClientState {
   code: string;
   phase: Phase;
+  /** Social mode: the game stops after the names have been shown twice, and the players play it themselves. */
+  social: boolean;
   players: PlayerInfo[];
   memorize: MemorizeState | null;
   play: PlayState | null;
@@ -114,6 +117,7 @@ export type Ack<T = object> = (res: ({ ok: true } & T) | { ok: false; error: str
 export interface ClientToServerEvents {
   'host:create': (cb: Ack<{ code: string; hostToken: string }>) => void;
   'host:resume': (p: { code: string; hostToken: string }, cb: Ack) => void;
+  'host:settings': (p: { social?: boolean }) => void;
   'host:start': () => void;
   'host:skip': () => void;
   'host:backToLobby': () => void;

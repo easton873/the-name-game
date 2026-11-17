@@ -120,6 +120,7 @@ function lobbyView(s: ClientState): string {
     </div>
     <div class="lobby-right">
       <div class="roster sheet"><h3>Who's playing?</h3><div class="roster-grid" id="roster"></div></div>
+      <label class="social" for="social"><input type="checkbox" id="social" /><span class="box"></span><span class="lbl"><b>Social mode</b><small>Everyone writes a name and sees all the names twice — then the game ends and you play the guessing part yourselves.</small></span></label>
       <button class="pbtn green startbtn" id="start" disabled>Start game</button>
     </div>
   </section>`;
@@ -144,6 +145,8 @@ function lobbyLive(s: ClientState) {
       (el, p) => el.classList.toggle('off', !p.connected),
     );
   }
+  const social = $<HTMLInputElement>('#social')!;
+  if (social.checked !== s.social) social.checked = s.social;
   const live = s.players.filter((p) => p.connected).length;
   const start = $<HTMLButtonElement>('#start')!;
   start.disabled = live < MIN_PLAYERS;
@@ -263,6 +266,17 @@ function overView(s: ClientState): string {
   </section>`;
 }
 
+function socialOverView(): string {
+  return `<section>
+    <div class="names-sheet sheet">
+      ${pencilHTML('#3fb36b').replace('class="pencil"', 'class="pencil hero"')}
+      <div class="wline headline">Now you play!</div>
+      <div class="sub">You've seen every name twice.<br><b>Take turns guessing who wrote what</b> — out loud, around the table.</div>
+      <button class="pbtn green again2" id="again">Back to the lobby</button>
+    </div>
+  </section>`;
+}
+
 function confetti(count = 60) {
   const colors = ['#f7c21b', '#e5484d', '#3b82f6', '#3fb36b', '#8e5bd6', '#f08c2e', '#ec6fa5'];
   for (let i = 0; i < count; i++) {
@@ -310,7 +324,7 @@ function render() {
   const s = state;
   if (!s) return;
   $('#hudCode')!.innerHTML = s.phase === 'lobby' ? '' : `Room <b>${esc(s.code)}</b>`;
-  strip.hidden = s.phase === 'lobby' || s.phase === 'memorize' || s.phase === 'gameOver';
+  strip.hidden = s.phase === 'lobby' || s.phase === 'memorize' || s.phase === 'gameOver' || s.phase === 'socialOver';
   $('#skip')!.hidden = !(s.phase === 'ready' || (s.phase === 'play' && !s.play?.event));
 
   const key = `${s.phase}|${qrDataUrl ? 'qr' : ''}|${s.memorize ? s.memorize.pass + ':' + s.memorize.index : ''}|${s.play ? JSON.stringify(s.play) : ''}`;
@@ -321,6 +335,7 @@ function render() {
       case 'lobby':
         stage.innerHTML = lobbyView(s);
         $('#start')!.addEventListener('click', () => socket.emit('host:start'));
+        $<HTMLInputElement>('#social')!.addEventListener('change', (e) => socket.emit('host:settings', { social: (e.target as HTMLInputElement).checked }));
         $('#roster')!.addEventListener('click', (e) => {
           const id = (e.target as HTMLElement).dataset.kick;
           if (id) socket.emit('host:kick', { playerId: id });
@@ -337,6 +352,10 @@ function render() {
         break;
       case 'play':
         stage.innerHTML = s.play?.event ? eventView(s, s.play.event) : turnView(s);
+        break;
+      case 'socialOver':
+        stage.innerHTML = socialOverView();
+        $('#again')?.addEventListener('click', () => socket.emit('host:backToLobby'));
         break;
       case 'gameOver':
         stage.innerHTML = overView(s);
