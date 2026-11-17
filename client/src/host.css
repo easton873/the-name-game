@@ -162,16 +162,21 @@ body { overflow: hidden; }
 .first .pencil { --pw: 1.6rem; --tilt: 38deg; margin-right: 0.6rem; }
 .first .lbl { color: var(--ink-dim); }
 .first b { font-weight: 400; font-size: 4.6rem; background: var(--pencil); padding: 0 1.2rem; border-radius: 0.6rem; transform: rotate(-1.5deg); animation: stampIn 0.7s cubic-bezier(0.3, 1.8, 0.5, 1) both 0.3s; }
-.peek { width: 100%; display: flex; flex-direction: column; gap: 0.6rem; align-items: center; margin-top: 0.4rem; }
-.peek-title { font-size: 1.4rem; color: var(--ink-dim); }
-.peek-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem 1rem; max-width: 80rem; }
-.peek-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 1.2rem 0.3rem 0.6rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 99rem; font-family: var(--font-write); font-size: 2rem; }
-.peek-row .pencil { --pw: 0.9rem; --tilt: 40deg; margin: 0 0.5rem 0 0.2rem; }
-.peek-row .arrow { color: var(--ink-dim); }
-.peek-row .ans { display: none; }
-.peek-row .hid { color: var(--ink-dim); letter-spacing: 0.2rem; }
-.peek-row.on { background: #fff3c4; }
-.peek-row.on .ans { display: inline; animation: pop 0.4s both; }
-.peek-row.on .hid { display: none; }
+.reveal-page { gap: 1.6rem !important; }
+.peek-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.4rem 1.8rem; max-width: 96rem; }
+/* Every card is exactly the same size, before and after a click, so size never gives a name's length away. */
+.peek-card { display: flex; flex-direction: column; justify-content: space-between; width: 30rem; height: 10rem; padding: 0.8rem 1.4rem 0.6rem; background: var(--paper); border: 2.5px solid var(--ink); border-radius: 14px 4px 16px 5px / 5px 16px 4px 14px; box-shadow: 3px 4px 0 rgba(47, 49, 64, 0.2); text-align: left; transition: transform 0.1s; }
+.peek-card:hover { transform: translateY(-0.2rem) rotate(-0.6deg); }
+.peek-card .top { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-write); font-size: 2.2rem; color: var(--ink); }
+.peek-card .top .pencil { --pw: 0.9rem; --tilt: 40deg; margin: 0 0.5rem 0 0.2rem; }
+.peek-card .who { max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peek-card .wrote { color: var(--ink-dim); font-size: 1.6rem; }
+.peek-card .line { display: flex; align-items: center; justify-content: center; flex: 1; font-family: var(--font-write); font-size: 2.2rem; line-height: 1.1; text-align: center; overflow-wrap: anywhere; }
+.peek-card .hid { color: var(--ink-dim); letter-spacing: 0.4rem; }
+.peek-card .ans { display: none; }
+.peek-card.on { background: #fff3c4; }
+.peek-card.on .ans { display: inline; animation: pop 0.4s both; }
+.peek-card.on .hid { display: none; }
 .peek-btns { display: flex; gap: 1.6rem; margin-top: 0.8rem; }
 .peek-btns .pbtn { font-size: 2rem; padding: 0.4em 1.2em; }
+.reveal-page .peek-grid { max-height: 33rem; overflow-y: auto; padding: 0.6rem 1rem 0.8rem; }

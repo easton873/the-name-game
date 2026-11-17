@@ -13,6 +13,9 @@ let viewKey = '';
 let roomCode = '';
 let joinBase = location.origin;
 let qrDataUrl = '';
+/** Social mode end: which page we're on, and which names have been revealed (host screen only). */
+let socialPage: 'end' | 'reveal' = 'end';
+const revealed = new Set<string>();
 
 // ------------------------------------------------------------------ connection
 
@@ -268,18 +271,27 @@ function overView(s: ClientState): string {
 
 function socialOverView(s: ClientState): string {
   const first = byId(s, s.firstPlayerId);
-  const rows = (s.recap ?? [])
-    .map((r) => `<button class="peek-row" data-peek="${r.id}">${pencilHTML(colorOf(s, r.id))}<span class="who">${nameOf(s, r.id)}</span><span class="arrow">→</span><span class="hid">? ? ?</span><span class="ans">${esc(r.secretName)}</span></button>`)
-    .join('');
   return `<section>
     <div class="names-sheet sheet social-end">
       ${pencilHTML('#3fb36b').replace('class="pencil"', 'class="pencil hero"')}
       <div class="wline headline">Now you play!</div>
       <div class="first">${first ? pencilHTML(first.color) : ''}<span class="lbl">Who goes first?</span><b>${esc(first?.name ?? '?')}</b></div>
       <div class="sub">You've seen every name twice. <b>Take turns guessing who wrote what</b> — out loud, around the table.</div>
-      <div class="peek"><div class="peek-title">Settling an argument? Peek at the answers:</div><div class="peek-grid">${rows}</div></div>
-      <div class="peek-btns"><button class="pbtn blue" id="revealAll">Reveal all the names</button><button class="pbtn green" id="again">Back to the lobby</button></div>
+      <div class="peek-btns"><button class="pbtn blue" id="toReveal">Reveal the names</button><button class="pbtn green" id="again">Back to the lobby</button></div>
     </div>
+  </section>`;
+}
+
+/** The reveal page: one identical card per player. A name only shows once its card is clicked. */
+function socialRevealView(s: ClientState): string {
+  const cards = (s.recap ?? [])
+    .map((r) => `<button class="peek-card${revealed.has(r.id) ? ' on' : ''}" data-peek="${r.id}"><span class="top">${pencilHTML(colorOf(s, r.id))}<span class="who">${nameOf(s, r.id)}</span><span class="wrote">wrote</span></span><span class="line"><span class="hid">? ? ?</span><span class="ans">${esc(r.secretName)}</span></span></button>`)
+    .join('');
+  return `<section class="reveal-page">
+    <div class="eyebrow">Who wrote what?</div>
+    <div class="peek-grid">${cards}</div>
+    <div class="sub">Click a card to reveal that name.</div>
+    <div class="peek-btns"><button class="pbtn ghost" id="back">← Back</button><button class="pbtn blue" id="revealAll">Reveal all</button></div>
   </section>`;
 }
 
@@ -333,6 +345,10 @@ function render() {
   strip.hidden = s.phase === 'lobby' || s.phase === 'memorize' || s.phase === 'gameOver' || s.phase === 'socialOver';
   $('#skip')!.hidden = !(s.phase === 'ready' || (s.phase === 'play' && !s.play?.event));
 
+  if (s.phase !== 'socialOver') {
+    socialPage = 'end';
+    revealed.clear();
+  }
   const key = `${s.phase}|${qrDataUrl ? 'qr' : ''}|${s.memorize ? s.memorize.pass + ':' + s.memorize.index : ''}|${s.play ? JSON.stringify(s.play) : ''}`;
   if (key !== viewKey) {
     viewKey = key;
@@ -359,20 +375,40 @@ function render() {
       case 'play':
         stage.innerHTML = s.play?.event ? eventView(s, s.play.event) : turnView(s);
         break;
-      case 'socialOver':
-        stage.innerHTML = socialOverView(s);
-        $('#again')?.addEventListener('click', () => socket.emit('host:backToLobby'));
-        // Names stay hidden until the host clicks: one at a time, or all at once.
-        const rowsEl = [...stage.querySelectorAll<HTMLElement>('.peek-row')];
-        const all = $<HTMLButtonElement>('#revealAll')!;
-        const sync = () => (all.textContent = rowsEl.every((r) => r.classList.contains('on')) ? 'Hide all the names' : 'Reveal all the names');
-        rowsEl.forEach((r) => r.addEventListener('click', () => (r.classList.toggle('on'), sync())));
-        all.addEventListener('click', () => {
-          const show = !rowsEl.every((r) => r.classList.contains('on'));
-          rowsEl.forEach((r) => r.classList.toggle('on', show));
+      case 'socialOver': {
+        if (socialPage === 'reveal') {
+          stage.innerHTML = socialRevealView(s);
+          const cards = [...stage.querySelectorAll<HTMLElement>('.peek-card')];
+          const all = $<HTMLButtonElement>('#revealAll')!;
+          const sync = () => (all.textContent = cards.every((c) => c.classList.contains('on')) ? 'Hide all' : 'Reveal all');
           sync();
-        });
+          const set = (c: HTMLElement, on: boolean) => {
+            c.classList.toggle('on', on);
+            if (on) revealed.add(c.dataset.peek!);
+            else revealed.delete(c.dataset.peek!);
+          };
+          cards.forEach((c) => c.addEventListener('click', () => (set(c, !c.classList.contains('on')), sync())));
+          all.addEventListener('click', () => {
+            const show = !cards.every((c) => c.classList.contains('on'));
+            cards.forEach((c) => set(c, show));
+            sync();
+          });
+          $('#back')!.addEventListener('click', () => {
+            socialPage = 'end';
+            viewKey = '';
+            render();
+          });
+        } else {
+          stage.innerHTML = socialOverView(s);
+          $('#again')!.addEventListener('click', () => socket.emit('host:backToLobby'));
+          $('#toReveal')!.addEventListener('click', () => {
+            socialPage = 'reveal';
+            viewKey = '';
+            render();
+          });
+        }
         break;
+      }
       case 'gameOver':
         stage.innerHTML = overView(s);
         $('#again')?.addEventListener('click', () => socket.emit('host:backToLobby'));

@@ -19,7 +19,7 @@ Themed like early-writing practice sheets: ruled paper (blue top line, dotted mi
 
 The big screen shows whose turn it is (teammates smaller on either side), announces each guess and whether it was right for 10 seconds, and the host can press **Skip** (or space) to move on if a player's phone dropped.
 
-**Social mode** (checkbox in the host lobby): everyone writes a name and the big screen shows all the names twice as usual, then a random player is picked to go first and the game just ends: the group plays the guessing part themselves, out loud. The big screen has a "Reveal the names" fallback (one name at a time, or all) to settle arguments; phones never receive the names.
+**Social mode** (checkbox in the host lobby): everyone writes a name and the big screen shows all the names twice as usual, then a random player is picked to go first and the game just ends: the group plays the guessing part themselves, out loud. The end screen has a **Reveal the names** button that opens a page of identical cards (one per player) that the host clicks to reveal one name at a time, or all at once, to settle arguments; phones never receive the names.
 
 ### Status
 
