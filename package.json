@@ -9,7 +9,10 @@
     "dev": "concurrently -n server,client -c magenta,cyan \"tsx watch server/index.ts\" \"vite --config client/vite.config.ts --host\"",
     "build": "vite build --config client/vite.config.ts && tsc -p tsconfig.server.json",
     "start": "node dist/server/server/index.js",
-    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p client/tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p client/tsconfig.json --noEmit",
+    "test:unit": "tsx test/match.test.ts",
+    "test:sim": "tsx test/simulate.ts",
+    "test": "npm run test:unit && npm run test:sim"
   },
   "dependencies": {
     "express": "^4.21.2",

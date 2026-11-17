@@ -56,3 +56,89 @@ body { overflow: hidden; }
 .names-sheet { position: relative; padding: 2rem 4rem 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; transform: rotate(-0.6deg); max-width: 88%; }
 .names-sheet .pencil.hero { position: absolute; right: -1.5rem; top: -3.5rem; --pw: 3rem; --tilt: 30deg; animation: bob 2.6s ease-in-out infinite; }
 .sub { font-size: 1.7rem; }
+
+.hud .skip { font-size: 1.5rem; padding: 0.3em 1em; box-shadow: 0 3px 0 var(--ink); opacity: 0.7; }
+.hud .skip small { font-family: var(--font-body); font-size: 0.7em; opacity: 0.6; }
+.pchip.active { background: #fff3c4; transform: translateY(-0.4rem) scale(1.06); box-shadow: 0 0.4rem 0 var(--ink); }
+.pchip.gaveup { border-style: dashed; opacity: 0.7; }
+.pchip .plus { font-size: 1.3rem; color: var(--ink-dim); margin-left: 0.3rem; }
+.pchip .plus:empty { display: none; }
+
+/* ---------- memorize ---------- */
+.name-sheet { width: 88%; padding: 2.4rem 3rem; transform: rotate(-0.6deg); }
+.wline.giant { --lh: 15rem; text-align: center; }
+.holdbar { width: min(60rem, 80%); height: 1.6rem; border: 2.5px solid var(--ink); border-radius: 99rem; background: var(--paper); overflow: hidden; }
+.holdbar i { display: block; height: 100%; background: var(--pencil); transform-origin: left; animation: shrink linear forwards; }
+@keyframes shrink { to { transform: scaleX(0); } }
+
+/* ---------- turn ---------- */
+.team-row { display: flex; align-items: center; justify-content: center; gap: 3rem; width: 96%; }
+.team-row .side { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; }
+.team-row .side.left { align-items: flex-end; }
+.team-row .side.right { align-items: flex-start; }
+.member { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-write); font-size: 2.4rem; padding: 0.2rem 1.2rem 0.2rem 0.6rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 99rem; animation: pop 0.5s both; }
+.member .pencil { --pw: 1rem; --tilt: 40deg; margin-right: 0.4rem; }
+.leader { position: relative; padding: 1.6rem 3.5rem 1.4rem; transform: rotate(-1deg); flex: none; }
+.leader .pencil.big { position: absolute; right: -1.8rem; top: -3.4rem; --pw: 3rem; --tilt: 30deg; animation: bob 2.6s ease-in-out infinite; }
+.leader .wline.headline { padding: 0 1rem; }
+.masks-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+.masks { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem 2.6rem; max-width: 94%; }
+.mask { display: flex; align-items: flex-end; gap: 0.5rem; font-family: var(--font-write); font-size: 3.6rem; line-height: 1.1; padding: 0.2rem 1.2rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 0.8rem; }
+.mask b { font-weight: 400; animation: pop 0.6s cubic-bezier(0.3, 1.8, 0.5, 1) both; }
+.mask .blank { display: block; width: 2rem; height: 2.4rem; border-bottom: 0.35rem dotted var(--ink-dim); }
+.mask .gap { width: 1.6rem; }
+
+/* ---------- guess announcement ---------- */
+.guess-sheet { padding: 1.6rem 4rem 1.4rem; transform: rotate(0.6deg); min-width: 56rem; }
+.guess-sheet .gwho { display: flex; align-items: center; justify-content: center; gap: 0.8rem; font-size: 2.4rem; color: var(--ink-dim); margin-bottom: 0.2rem; }
+.guess-sheet .gwho .pencil { --pw: 1.2rem; --tilt: 40deg; margin-right: 0.6rem; }
+.guess-sheet .gwho b { color: var(--ink); font-family: var(--font-write); font-weight: 400; font-size: 3.2rem; }
+.wline.quote { --lh: 11rem; font-size: 7.2rem; text-align: center; }
+.stamp { font-family: var(--font-write); font-size: 9rem; line-height: 1; padding: 0.1em 0.5em; border: 0.7rem solid currentColor; border-radius: 1.6rem; transform: rotate(-6deg); animation: stampIn 0.7s cubic-bezier(0.3, 1.8, 0.5, 1) both 0.5s; letter-spacing: 0.2rem; background: var(--paper); }
+.stamp.good { color: var(--good); }
+.stamp.bad { color: var(--bad); }
+@keyframes stampIn { from { transform: scale(4) rotate(-14deg); opacity: 0; } to { transform: scale(1) rotate(-6deg); opacity: 1; } }
+.event .sub { min-height: 3em; }
+
+/* ---------- winner ---------- */
+.over { gap: 1.2rem !important; }
+.winner-name { position: relative; padding: 1.2rem 4rem 1rem; transform: rotate(-1.2deg); animation: stampIn2 0.9s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+@keyframes stampIn2 { from { transform: scale(0.2) rotate(-20deg); opacity: 0; } }
+.winner-name .pencil.big { position: absolute; right: -2rem; top: -3.6rem; --pw: 3.2rem; --tilt: 30deg; animation: bob 2s ease-in-out infinite; }
+.drum { font-family: var(--font-write); font-size: 2.8rem; color: var(--ink-dim); opacity: 0; animation: fadeUp 0.6s ease both; margin-top: 0.6rem; }
+.reveal-sheet { width: 92%; padding: 1.4rem 3rem; transform: rotate(0.5deg); opacity: 0; animation: fadeUp 0.6s ease both calc(var(--t0, 3.4s) - 0.8s); animation-delay: 2.4s; }
+.wline.reveal { position: relative; overflow: visible; }
+.reveal span { display: inline-block; opacity: 0; animation: inkIn 0.5s cubic-bezier(0.3, 1.8, 0.5, 1) both; animation-delay: calc(var(--t0) + var(--i) * var(--step)); }
+@keyframes inkIn { from { opacity: 0; transform: translateY(-1.4em) scale(1.8) rotate(-12deg); } to { opacity: 1; } }
+.reveal .writer { position: absolute; left: 0; top: 10%; font-style: normal; pointer-events: none; animation: writeAcross calc(var(--n) * var(--step)) linear both; animation-delay: var(--t0); opacity: 0; }
+.reveal .writer .pencil { --pw: 2.6rem; --tilt: 38deg; }
+@keyframes writeAcross { 0% { left: 0; opacity: 1; } 99% { left: 100%; opacity: 1; } 100% { left: 100%; opacity: 0; } }
+.recap { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.8rem; max-width: 92%; font-size: 1.6rem; color: var(--ink-dim); opacity: 0; animation: fadeUp 0.6s ease both; }
+.recap b { color: var(--ink); font-family: var(--font-write); font-weight: 400; font-size: 1.9rem; }
+.again { font-size: 2.4rem; opacity: 0; animation: fadeUp 0.6s ease both; }
+@keyframes fadeUp { from { transform: translateY(2rem); opacity: 0; } to { opacity: 1; } }
+.cf { position: fixed; top: -6rem; z-index: 40; pointer-events: none; opacity: 0; animation: fall linear forwards; }
+@keyframes fall { 8% { opacity: 1; } 100% { transform: translateY(118vh) translateX(var(--dx)) rotate(var(--rot)); opacity: 1; } }
+
+/* ---------- polish: keep everything on screen, keep text off the ruled lines ---------- */
+.eyebrow, .sub, .drum, .status, .recap { background: var(--paper); box-shadow: 0 0 0 0.6rem var(--paper); border-radius: 0.4rem; }
+.recap .rc { background: none; }
+.turn .eyebrow { margin-bottom: 1.4rem; }
+.team-row { gap: 5rem; }
+.leader .pencil.big { right: -2.4rem; top: -2.8rem; --pw: 2.6rem; }
+.mask { font-size: 3rem; }
+.masks { gap: 0.8rem 2rem; }
+.guess-sheet { padding: 1rem 4rem 0.8rem; }
+.guess-sheet .gwho { font-size: 2rem; }
+.guess-sheet .gwho b { font-size: 2.8rem; }
+.wline.quote { --lh: 9rem; font-size: 6rem; }
+.stamp { font-size: 7rem; border-width: 0.6rem; }
+.event { gap: 1.2rem !important; }
+.over { gap: 0.9rem !important; }
+.over .winner-name .wline.headline { --lh: 7rem; font-size: 4.8rem; }
+.winner-name { padding: 0.8rem 3.4rem 0.6rem; }
+.over .wline.giant { --lh: 10rem; }
+.reveal-sheet { padding: 1rem 3rem; }
+.drum { font-size: 2.4rem; margin-top: 0; }
+.again { font-size: 2rem; padding: 0.35em 1.4em; }
+.winner-name .pencil.big { --pw: 2.4rem; right: -1.2rem; top: -3.2rem; }

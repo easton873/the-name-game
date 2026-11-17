@@ -92,15 +92,20 @@ io.on('connection', (socket) => {
     if (room && role === 'host') fn(room);
   };
   socket.on('host:start', asHost((r) => r.start()));
+  socket.on('host:skip', asHost((r) => r.skip()));
   socket.on('host:backToLobby', asHost((r) => r.backToLobby()));
   socket.on('host:kick', (p) => room && role === 'host' && room.kick(String(p?.playerId)));
 
   const pid = () => (socket.data as { playerId?: string }).playerId;
-  socket.on('player:submitName', (p, cb) => {
+  const asPlayer = <T>(fn: (r: Room, id: string) => ({ ok: true } & T) | { ok: false; error: string }, cb?: (res: any) => void) => {
     if (!room || role !== 'player' || !pid()) return;
-    const err = room.submitName(pid()!, p?.name);
-    cb?.(err ? { ok: false, error: err } : { ok: true });
-  });
+    const res = fn(room, pid()!); // run even when the client sent no callback
+    cb?.(res);
+  };
+  socket.on('player:submitName', (p, cb) => asPlayer((r, id) => r.submitName(id, p?.name), cb));
+  socket.on('player:ready', (cb) => asPlayer((r, id) => r.submitReady(id), cb));
+  socket.on('player:guess', (p, cb) => asPlayer((r, id) => r.submitGuess(id, String(p?.targetId), p?.name), cb));
+  socket.on('player:giveUp', (cb) => asPlayer((r, id) => r.giveUp(id), cb));
 
   socket.on('disconnect', () => {
     if (!room) return;

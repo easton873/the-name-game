@@ -4,24 +4,31 @@ A Jackbox-style party game, in the style of [matchy-finderoo](https://github.com
 
 Themed like early-writing practice sheets: ruled paper (blue top line, dotted middle line, red baseline) and pencils everywhere.
 
-## The game (design)
+## How it plays
 
-1. **Names** – every player secretly writes one name.
-2. **Memorize** – the big screen shows every name, 4 seconds each, in random order. Twice, with a break in between where everyone taps *Ready* on their phone.
-3. **Guessing** – a random player goes first and guesses *which player wrote which name*. Right: that player is eliminated and joins the guesser's team, and the guesser goes again. Wrong: it's the guessed player's turn.
-4. The UI never lists the names – players have to type from memory. Typed names are fuzzy-matched against the submitted names so typos are forgiven, and a name that matches nothing is rejected.
-5. **Give up** – if every remaining player gives up, the first letter of every unclaimed name is revealed, then the next, and so on. A correct guess resets everyone's give-up status.
-6. Last team standing wins.
+1. **Names** – every player secretly writes one name. Letters, numbers, spaces and the symbols `$ ! & @` only (so `P!nk` works); anything else disables the button and says why.
+2. **Memorize** – the big screen shows every name for 4 seconds each, in random order, then everyone taps **Ready** on their phone and it shows them all again in a new random order.
+3. **Guessing** – a random player goes first: they pick a player and type, from memory, the name that player wrote.
+   - **Right:** that player's name leaves the pool and they join the guesser's team. The guesser keeps going.
+   - **Wrong** (a real name from the pool, but not theirs): the guessed player's team gets the turn.
+   - **Not a name in the pool** (typo too far off, already guessed, not a name at all): free retry, nothing is lost.
+   - The UI never lists names. Matching ignores case, accents and extra spaces, and every part of a multi-part name must be typed. Names already guessed no longer match; if a typed name is equally close to two names it's rejected as ambiguous. Small typos are forgiven – see `typoTolerance` in `server/match.ts` (set it to `() => 0` for exact spelling only).
+   - **Teams:** an eliminated player shares the leader's name, which is the only one from the team still in the pool. Anyone on the team can type guesses on their phone.
+4. **Give up** – the team whose turn it is can give up; the turn goes to a random team that hasn't. When every team has given up, one more letter of each unguessed name is revealed (as `C _ _ _ _ _ _  J _ _ _`) and everyone is back in. A correct guess resets all the give-ups.
+5. **Winner** – when only one name is left, that player wins and their secret name is revealed with a pencil writing it out.
+
+The big screen shows whose turn it is (teammates smaller on either side), announces each guess and whether it was right for 10 seconds, and the host can press **Skip** (or space) to move on if a player's phone dropped.
 
 ### Status
 
-- [x] Pencil-and-paper theme (landing, host lobby, phone join)
-- [x] Lobby + room codes + QR join
-- [x] Name entry phase
-- [ ] Memorize phase (two passes, ready-up)
-- [ ] Guessing, elimination, teams
-- [ ] Fuzzy name matching
-- [ ] Give up / letter reveals
+- [x] Pencil-and-paper theme
+- [x] Lobby, room codes, QR join
+- [x] Name entry with symbol validation
+- [x] Memorize (two passes, ready-up)
+- [x] Guessing, elimination, teams
+- [x] Name matching
+- [x] Give up / letter reveals
+- [x] Winner reveal
 
 ## Run it locally
 
@@ -31,7 +38,7 @@ npm run build
 npm start          # http://localhost:3000
 ```
 
-Open `http://localhost:3000/host.html` on the laptop/TV; phones scan the QR code. For development with hot reload: `npm run dev` (server on :3000, Vite on :5173 – open `http://localhost:5173/host.html`).
+Open `http://localhost:3000/host.html` on the laptop/TV; phones scan the QR code. `npm test` runs the matching unit tests and a full bot game over real sockets. For development with hot reload: `npm run dev` (server on :3000, Vite on :5173 – open `http://localhost:5173/host.html`).
 
 ## Layout
 

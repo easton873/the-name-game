@@ -28,6 +28,13 @@ export function pencilHTML(color: string, style = ''): string {
   </svg></span>`;
 }
 
+/** A partly revealed name: shown letters, dotted blanks for hidden ones, gaps for spaces. */
+export function maskHTML(mask: string): string {
+  return `<div class="mask">${Array.from(mask)
+    .map((c) => (c === ' ' ? '<span class="gap"></span>' : c === '_' ? '<i class="blank"></i>' : `<b>${esc(c)}</b>`))
+    .join('')}</div>`;
+}
+
 // ---- server clock (kept for later timed phases) -------------------------------------------
 
 export const timerHTML = (cls = '') =>
