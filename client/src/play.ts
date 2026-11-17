@@ -392,7 +392,7 @@ function socialOverView(s: ClientState): View {
   const mine = byId(s, s.you?.id);
   return {
     header: header('Social mode', 'Now you play!'),
-    main: centerView(s.firstPlayerId === s.you?.id ? 'You go first!' : `${nameOf(s, s.firstPlayerId)} goes first!`, 'You have seen every name twice. Take turns guessing who wrote what — out loud, with your friends.', '', mine?.color),
+    main: centerView(s.firstPlayerId === s.you?.id ? 'You go first!' : `${nameOf(s, s.firstPlayerId)} goes first!`, 'You have seen every name twice. Take turns guessing who wrote what.', '', mine?.color),
   };
 }
 

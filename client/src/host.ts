@@ -276,7 +276,7 @@ function socialOverView(s: ClientState): string {
       ${pencilHTML('#3fb36b').replace('class="pencil"', 'class="pencil hero"')}
       <div class="wline headline">Now you play!</div>
       <div class="first">${first ? pencilHTML(first.color) : ''}<span class="lbl">Who goes first?</span><b>${esc(first?.name ?? '?')}</b></div>
-      <div class="sub">You've seen every name twice. <b>Take turns guessing who wrote what</b> — out loud, around the table.</div>
+      <div class="sub">You've seen every name twice. <b>Take turns guessing who wrote what</b>.</div>
       <div class="peek-btns"><button class="pbtn blue" id="toReveal">Reveal the names</button><button class="pbtn green" id="again">Back to the lobby</button></div>
     </div>
   </section>`;
