@@ -1,6 +1,6 @@
 import './theme.css';
 import './play.css';
-import { MAX_PLAYER_NAME_LENGTH, type ClientState, type GuessEvent } from '../../shared/types';
+import { MAX_PLAYER_NAME_LENGTH, MAX_SUGGESTION_LENGTH, type ClientState, type GuessEvent } from '../../shared/types';
 import { MAX_NAME_LENGTH, validateName } from '../../shared/names';
 import { $, esc, maskHTML, pencilHTML, socket } from './common';
 
@@ -23,6 +23,8 @@ let draftName = '';
 let guessTarget: string | null = null;
 let guessText = '';
 let giveUpArmed = false;
+let suggestTarget: string | null = null;
+let suggestText = '';
 
 const params = new URLSearchParams(location.search);
 
@@ -243,18 +245,80 @@ function playView(s: ClientState): View {
     return { header: header(kicker, title), main: centerView(title, text, masksHTML(pl.masks), mine?.color) };
   }
 
-  if (!you.canGuess) {
+  if (!you.canGuess && !you.canSuggest) {
     const t = nameOf(s, pl.turnLeaderId);
     const why = eliminated ? `You're on ${nameOf(s, me)}'s team now — help them remember!` : 'Listen up, and remember the names.';
     return { header: header(kicker, `${t}'s turn`), main: centerView(`${t}'s turn`, why, masksHTML(pl.masks), mine?.color) };
+  }
+
+  // a teammate of the team whose turn it is: suggestions only, nothing is checked and nobody is forced to listen
+  if (you.canSuggest) {
+    const leaderName = nameOf(s, me);
+    const picks = pl.teams.filter((t) => t.leaderId !== me);
+    if (!picks.some((t) => t.leaderId === suggestTarget)) suggestTarget = null;
+    return {
+      header: header(`On ${leaderName}'s team`, `Help ${leaderName}!`, `Only ${leaderName} can guess. Send an idea!`),
+      main: `${masksHTML(pl.masks)}
+        <div class="sect">Which player? (optional)</div>
+        <div class="targets">${picks.map((t) => `<button class="target ${t.leaderId === suggestTarget ? 'on' : ''}" data-t="${t.leaderId}">${pencilHTML(byId(s, t.leaderId)?.color ?? '#888')}<span>${esc(nameOf(s, t.leaderId))}</span></button>`).join('')}</div>
+        <div class="sect">What do you think they wrote?</div>
+        <div class="write-sheet small sheet"><div class="wline"><input id="sg" maxlength="${MAX_SUGGESTION_LENGTH}" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" value="${esc(suggestText)}" /></div></div>
+        <div class="note">Suggestions aren't checked, so they can be anything — even a bluff.</div>
+        <div class="good-note" id="sent"></div>`,
+      footer: `<button class="pbtn blue full" id="suggest" disabled>Send suggestion</button>`,
+      after: () => {
+        const input = $<HTMLInputElement>('#sg')!;
+        const btn = $<HTMLButtonElement>('#suggest')!;
+        const refresh = () => (btn.disabled = !input.value.trim());
+        input.addEventListener('input', () => {
+          suggestText = input.value;
+          refresh();
+        });
+        refresh();
+        app.querySelectorAll<HTMLElement>('[data-t]').forEach((b) =>
+          b.addEventListener('click', () => {
+            suggestTarget = suggestTarget === b.dataset.t ? null : b.dataset.t!;
+            app.querySelectorAll('.target').forEach((x) => x.classList.toggle('on', (x as HTMLElement).dataset.t === suggestTarget));
+          }),
+        );
+        const send = () => {
+          if (btn.disabled) return;
+          btn.disabled = true;
+          socket.emit('player:suggest', { text: input.value, targetId: suggestTarget }, (res) => {
+            const note = $('#sent');
+            if (res.ok) {
+              suggestText = '';
+              input.value = '';
+              if (note) {
+                note.className = 'good-note';
+                note.textContent = `Sent to ${leaderName}! Send another if you like.`;
+              }
+            } else if (note) {
+              note.className = 'error';
+              note.textContent = res.error;
+            }
+            refresh();
+          });
+        };
+        btn.addEventListener('click', send);
+        input.addEventListener('keydown', (e) => e.key === 'Enter' && send());
+      },
+    };
   }
 
   // our turn: pick a player, type the name from memory
   const targets = pl.teams.filter((t) => t.leaderId !== me);
   if (!targets.some((t) => t.leaderId === guessTarget)) guessTarget = null;
   return {
-    header: header(myTeam?.memberIds.length ? 'Your team’s turn' : 'Your turn', 'Who wrote which name?', 'Pick a player, then type the name they wrote.'),
+    header: header(myTeam?.memberIds.length ? 'Your team’s turn' : 'Your turn', 'Who wrote which name?', myTeam?.memberIds.length ? 'Your teammates can send ideas, but you make the call.' : 'Pick a player, then type the name they wrote.'),
     main: `${masksHTML(pl.masks)}
+      ${
+        you.suggestions.length
+          ? `<div class="sect">Ideas from your team (tap one to use it)</div><div class="suggs">${you.suggestions
+              .map((x) => `<button class="sugg" data-s="${x.id}"><b>${esc(nameOf(s, x.fromId))}</b>: “${esc(x.text)}”${x.targetId ? ` <i>for ${esc(nameOf(s, x.targetId))}</i>` : ''}</button>`)
+              .join('')}</div>`
+          : ''
+      }
       <div class="sect">1. Which player?</div>
       <div class="targets">${targets.map((t) => `<button class="target ${t.leaderId === guessTarget ? 'on' : ''}" data-t="${t.leaderId}">${pencilHTML(byId(s, t.leaderId)?.color ?? '#888')}<span>${esc(nameOf(s, t.leaderId))}</span></button>`).join('')}</div>
       <div class="sect">2. What name did they write?</div>
@@ -295,6 +359,15 @@ function playView(s: ClientState): View {
       };
       btn.addEventListener('click', submit);
       input.addEventListener('keydown', (e) => e.key === 'Enter' && submit());
+      app.querySelectorAll<HTMLElement>('[data-s]').forEach((b) =>
+        b.addEventListener('click', () => {
+          const x = you.suggestions.find((y) => String(y.id) === b.dataset.s);
+          if (!x) return;
+          if (x.targetId && targets.some((t) => t.leaderId === x.targetId)) guessTarget = x.targetId;
+          guessText = x.text;
+          render(true);
+        }),
+      );
       const gu = $<HTMLButtonElement>('#giveup')!;
       gu.addEventListener('click', () => {
         if (!giveUpArmed) {
@@ -336,6 +409,8 @@ function signature(): string {
     s?.you?.secretName,
     s?.you?.ready,
     s?.you?.canGuess,
+    s?.you?.canSuggest,
+    s?.you?.suggestions?.length,
     s?.you?.teamLeaderId,
     s?.memorize?.pass,
     s?.play?.event?.id,

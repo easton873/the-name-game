@@ -8,13 +8,13 @@ Themed like early-writing practice sheets: ruled paper (blue top line, dotted mi
 
 1. **Names** – every player secretly writes one name. Letters, numbers, spaces and the symbols `$ ! & @` only (so `P!nk` works); anything else disables the button and says why.
 2. **Memorize** – the big screen shows every name for 4 seconds each, in random order, then everyone taps **Ready** on their phone and it shows them all again in a new random order.
-3. **Guessing** – a random player goes first: they pick a player and type, from memory, the name that player wrote.
-   - **Right:** that player's name leaves the pool and they join the guesser's team. The guesser keeps going.
-   - **Wrong** (a real name from the pool, but not theirs): the guessed player's team gets the turn.
-   - **Not a name in the pool** (typo too far off, already guessed, not a name at all): free retry, nothing is lost.
-   - The UI never lists names. Matching ignores case, accents and extra spaces, and every part of a multi-part name must be typed. Names already guessed no longer match; if a typed name is equally close to two names it's rejected as ambiguous. Small typos are forgiven – see `typoTolerance` in `server/match.ts` (set it to `() => 0` for exact spelling only).
-   - **Teams:** an eliminated player shares the leader's name, which is the only one from the team still in the pool. Anyone on the team can type guesses on their phone.
-4. **Give up** – the team whose turn it is can give up; the turn goes to a random team that hasn't. When every team has given up, one more letter of each unguessed name is revealed (as `C _ _ _ _ _ _  J _ _ _`) and everyone is back in. A correct guess resets all the give-ups.
+3. **Guessing** – a random player goes first: they pick a player and type, from memory, the name that player wrote. There are no timers on anyone's turn or on name entry.
+   - **Right:** that player is out and joins the guesser's team, and the guesser keeps going.
+   - **Wrong** (a real submitted name, but not theirs): the guessed player's team gets the turn, and any give-ups are cleared.
+   - **Not a submitted name** (typo too far off, or not a name at all): free retry, nothing changes.
+   - The UI never lists names. Matching ignores case, accents and extra spaces, and every part of a multi-part name must be typed. **Every name that was ever submitted stays a valid guess, even after it's been guessed** – so typing an old name costs you your turn. If a typed name is equally close to two names it's rejected as ambiguous. Small typos are forgiven – see `typoTolerance` in `server/match.ts` (set it to `() => 0` for exact spelling only).
+   - **Teams:** an eliminated player shares the leader's name. Only the leader (the one who wrote the name still in play) can guess or give up. Teammates can **send suggestions** – a free-text idea, optionally for a particular player, that is not checked at all (fake names are fine). Suggestions show up only on the leader's phone for that turn.
+4. **Give up** – the leader can give up; the turn goes to a random team that hasn't. If every team gives up in a row, with no guess in between, one more letter of each unguessed name is revealed (as `C _ _ _ _ _ _  J _ _ _`). Any right or wrong guess breaks the streak.
 5. **Winner** – when only one name is left, that player wins and their secret name is revealed with a pencil writing it out.
 
 The big screen shows whose turn it is (teammates smaller on either side), announces each guess and whether it was right for 10 seconds, and the host can press **Skip** (or space) to move on if a player's phone dropped.

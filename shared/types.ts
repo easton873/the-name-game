@@ -74,14 +74,27 @@ export interface MemorizeState {
   ms: number;
 }
 
+/** A hint from a teammate to the team leader. Never checked against anything. */
+export interface Suggestion {
+  id: number;
+  fromId: string;
+  targetId: string | null;
+  text: string;
+}
+export const MAX_SUGGESTION_LENGTH = 40;
+
 export interface YouInfo {
   id: string;
   /** Your own secret name, once you've submitted it. */
   secretName: string | null;
   ready: boolean;
   teamLeaderId: string | null;
-  /** It is your team's turn and nothing is on hold. */
+  /** You are the leader of the team whose turn it is and nothing is on hold: only you can guess or give up. */
   canGuess: boolean;
+  /** You are on the team whose turn it is, but not its leader: you can send suggestions. */
+  canSuggest: boolean;
+  /** Suggestions from teammates for this turn (leader only). */
+  suggestions: Suggestion[];
 }
 
 export interface ClientState {
@@ -110,6 +123,7 @@ export interface ClientToServerEvents {
   'player:ready': (cb?: Ack) => void;
   'player:guess': (p: { targetId: string; name: string }, cb?: Ack<{ result: 'correct' | 'wrong' }>) => void;
   'player:giveUp': (cb?: Ack) => void;
+  'player:suggest': (p: { text: string; targetId?: string | null }, cb?: Ack) => void;
 }
 
 export interface ServerToClientEvents {

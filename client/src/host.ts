@@ -207,7 +207,7 @@ function turnView(s: ClientState): string {
       <div class="leader sheet">${pencilHTML(colorOf(s, pl.turnLeaderId)).replace('class="pencil"', 'class="pencil big"')}<div class="wline headline">${nameOf(s, pl.turnLeaderId)}</div></div>
       <div class="side right">${right.map((id) => teamMember(s, id)).join('')}</div>
     </div>
-    <div class="sub">Pick a player and type the name they wrote — <b>from memory</b>.<br>${pl.teams.length} names still in the pool.</div>
+    <div class="sub">Pick a player and type the name they wrote — <b>from memory</b>.<br>${pl.teams.length} names still to find.</div>
     ${masksHTML(pl.masks)}
   </section>`;
 }
@@ -229,7 +229,7 @@ function eventView(s: ClientState, e: GuessEvent): string {
   const right = e.kind === 'correct';
   const shown = right ? (e.actualName ?? '') : (e.typed ?? '');
   const after = right
-    ? `${nameOf(s, e.targetId)} is out and <b>joins ${nameOf(s, e.guesserId)}'s team</b>.${e.final ? ' <b>Only one name is left!</b>' : ` ${pl.teams.length} names still in the pool.`}`
+    ? `${nameOf(s, e.targetId)} is out and <b>joins ${nameOf(s, e.guesserId)}'s team</b>.${e.final ? ' <b>Only one name is left!</b>' : ` ${pl.teams.length} names still to find.`}`
     : `Not quite! It's now <b>${nameOf(s, pl.turnLeaderId)}</b>'s turn.`;
   return `<section class="event">
     <div class="eyebrow">${who} guess${team && team.memberIds.length ? '' : 'es'} that…</div>

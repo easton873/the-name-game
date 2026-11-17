@@ -105,6 +105,7 @@ io.on('connection', (socket) => {
   socket.on('player:submitName', (p, cb) => asPlayer((r, id) => r.submitName(id, p?.name), cb));
   socket.on('player:ready', (cb) => asPlayer((r, id) => r.submitReady(id), cb));
   socket.on('player:guess', (p, cb) => asPlayer((r, id) => r.submitGuess(id, String(p?.targetId), p?.name), cb));
+  socket.on('player:suggest', (p, cb) => asPlayer((r, id) => r.suggest(id, p?.text, p?.targetId), cb));
   socket.on('player:giveUp', (cb) => asPlayer((r, id) => r.giveUp(id), cb));
 
   socket.on('disconnect', () => {

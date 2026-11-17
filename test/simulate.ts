@@ -91,6 +91,15 @@ async function main() {
   assert.ok(hostState.play!.masks.every((m) => /^\S[_ ]*$/.test(m.replace(/ /g, '')) || m.length > 0));
   assert.ok(hostState.play!.masks.some((m) => m.startsWith('C') && m.includes(' ')), 'multi-part name keeps its space');
 
+  // 1b) a give-up followed by a wrong guess: the wrong guess clears the give-up streak
+  {
+    const [, first] = turn();
+    assert.ok((await emit(first.s, 'player:giveUp')).ok);
+    await sleep(30);
+    assert.ok(hostState.play!.teams.some((t) => t.gaveUp), 'give-up recorded');
+    await waitIdle();
+  }
+
   // 2) free retries: emoji, unknown name, wrong target team
   let [name, me] = turn();
   const others = Object.entries(bots).filter(([n]) => n !== name);
@@ -112,6 +121,7 @@ async function main() {
   assert.ok(r.ok && r.result === 'wrong');
   await sleep(30);
   assert.equal(hostState.play!.event!.kind, 'wrong');
+  assert.ok(hostState.play!.teams.every((t) => !t.gaveUp), 'a wrong guess clears all give-ups');
   assert.equal(hostState.play!.turnLeaderId, target.id);
   r = await emit(target.s, 'player:giveUp');
   assert.ok(!r.ok, 'no actions while a result is on screen');
@@ -119,17 +129,40 @@ async function main() {
 
   // 4) correct guesses (with sloppy casing / accents) until one team is left
   let merges = 0;
+  let checkedTeam = false;
   while (hostState.phase === 'play') {
     await waitIdle();
     if (hostState.phase !== 'play') break;
     [name, me] = turn();
     const t = hostState.play!.teams.find((x) => x.leaderId !== me.id)!;
     const sloppy = secretOf(t.leaderId).toUpperCase().replace('É', 'E');
-    // a name that was already guessed no longer matches
-    if (merges > 0) {
-      const gone = Object.values(SECRETS).find((s) => !hostState.play!.teams.some((tm) => secretOf(tm.leaderId) === s))!;
+    if (merges > 0 && !checkedTeam) {
+      checkedTeam = true;
+      // teammates can only suggest: unchecked, shown to the leader only, and they can't guess or give up
+      const mate = Object.values(bots).find((b) => b.id !== me.id && b.st?.you?.teamLeaderId === me.id)!;
+      assert.ok(mate, 'has a teammate');
+      assert.ok(!mate.st!.you!.canGuess && mate.st!.you!.canSuggest);
+      r = await emit(mate.s, 'player:suggest', { text: 'Totally Fake 😀 Name', targetId: t.leaderId });
+      assert.ok(r.ok, 'suggestions are not validated');
+      await sleep(30);
+      assert.equal(me.st!.you!.suggestions.length, 1);
+      assert.equal(me.st!.you!.suggestions[0].text, 'Totally Fake 😀 Name');
+      assert.equal(me.st!.you!.suggestions[0].fromId, mate.id);
+      assert.equal(mate.st!.you!.suggestions.length, 0, 'only the leader sees suggestions');
+      assert.ok(!JSON.stringify(hostState).includes('Totally Fake'), 'the big screen never sees suggestions');
+      assert.ok(!(await emit(mate.s, 'player:guess', { targetId: t.leaderId, name: sloppy })).ok, 'teammates cannot guess');
+      assert.ok(!(await emit(mate.s, 'player:giveUp')).ok, 'teammates cannot give up');
+      assert.ok(!(await emit(me.s, 'player:suggest', { text: 'x' })).ok, 'the leader does not suggest');
+      assert.ok(!(await emit(mate.s, 'player:suggest', { text: '   ' })).ok, 'empty suggestions rejected');
+      // a name that was already guessed is STILL a valid guess: it counts as a (wrong) guess and ends the turn
+      const gone = Object.values(SECRETS).find((x) => !hostState.play!.teams.some((tm) => secretOf(tm.leaderId) === x))!;
       r = await emit(me.s, 'player:guess', { targetId: t.leaderId, name: gone });
-      assert.ok(!r.ok && /isn't one of the names/.test(r.error), 'removed names cannot be matched');
+      assert.ok(r.ok && r.result === 'wrong', 'a guessed name stays in the pool of valid guesses');
+      await sleep(30);
+      assert.equal(me.st!.you!.suggestions.length, 0, 'suggestions are cleared with the turn');
+      assert.equal(hostState.play!.turnLeaderId, t.leaderId);
+      await waitIdle();
+      continue;
     }
     r = await emit(me.s, 'player:guess', { targetId: t.leaderId, name: sloppy });
     assert.ok(r.ok && r.result === 'correct', JSON.stringify(r));

@@ -3,6 +3,7 @@ import { MAX_NAME_LENGTH, normalizeName, validateName } from '../shared/names.js
 import {
   EVENT_HOLD_MS,
   GIVEUP_HOLD_MS,
+  MAX_SUGGESTION_LENGTH,
   INTRO_MS,
   MAX_PLAYER_NAME_LENGTH,
   MEMORIZE_MS,
@@ -14,6 +15,7 @@ import {
   type MemorizeState,
   type Phase,
   type PlayState,
+  type Suggestion,
   type PlayerInfo,
   type ServerToClientEvents,
 } from '../shared/types.js';
@@ -85,6 +87,8 @@ export class Room {
   private event: GuessEvent | null = null;
   private eventSeq = 0;
   private winnerId: string | null = null;
+  private suggestions: Suggestion[] = [];
+  private suggestionSeq = 0;
 
   private timer: NodeJS.Timeout | null = null;
   private idleTimer: NodeJS.Timeout | null = null;
@@ -222,6 +226,7 @@ export class Room {
     this.maskOrder = [];
     this.event = null;
     this.winnerId = null;
+    this.suggestions = [];
     for (const p of this.players.values()) p.secretName = null;
   }
 
@@ -350,6 +355,7 @@ export class Room {
 
   private holdEvent(e: Omit<GuessEvent, 'id'>, then?: () => void) {
     this.event = { ...e, id: ++this.eventSeq };
+    this.suggestions = []; // suggestions belong to one turn
     this.after(e.holdMs, () => {
       this.event = null;
       then?.();
@@ -359,19 +365,18 @@ export class Room {
   submitGuess(playerId: string, targetId: string, raw: unknown): Result<{ result: 'correct' | 'wrong' }> {
     if (this.phase !== 'play') return err('The game is not at the guessing part.');
     if (this.event) return err('Wait for the announcement to finish.');
-    const guesser = this.leaderOf.get(playerId);
-    if (!guesser || guesser !== this.turnLeader) return err("It's not your team's turn.");
+    const guesser = playerId;
+    if (guesser !== this.turnLeader) return err(this.leaderOf.get(playerId) === this.turnLeader ? 'Only your team leader can guess. Send a suggestion instead!' : "It's not your team's turn.");
     if (!this.pool.includes(targetId) || targetId === guesser) return err('Pick a player from another team.');
     const v = validateName(raw);
     if (!v.ok) return err(v.error);
 
-    // Only names still in the pool can match; anything else is a free retry.
-    const m = matchName(v.name, this.pool.map((id) => this.secret(id)));
+    // Every name that was ever submitted stays a valid guess, even after it has been guessed.
+    // Anything else is a free retry.
+    const m = matchName(v.name, this.participants.map((id) => this.secret(id)));
     if (m.kind === 'none') return err("That isn't one of the names in the game.");
     if (m.kind === 'ambiguous') return err('That could be more than one name. Check your spelling.');
-    const own = normalizeName(this.secret(guesser));
     const want = normalizeName(this.secret(targetId));
-    if (m.name === own && want !== own) return err("That's your own team's name!");
 
     const base = { guesserId: guesser, targetId, typed: v.name, holdMs: EVENT_HOLD_MS };
     if (m.name === want) {
@@ -389,19 +394,33 @@ export class Room {
       this.broadcast();
       return { ok: true, result: 'correct' };
     }
-    // Wrong: the player who was guessed gets the next turn.
+    // Wrong: the player who was guessed gets the next turn, and the give-up streak is broken.
     this.turnLeader = targetId;
+    this.gaveUp.clear();
     this.holdEvent({ ...base, kind: 'wrong', actualName: null, final: false });
     this.broadcast();
     return { ok: true, result: 'wrong' };
   }
 
+  /** A teammate's idea for the leader. Deliberately unchecked: it can be a fake name. */
+  suggest(playerId: string, rawText: unknown, targetId: string | null | undefined): Result {
+    if (this.phase !== 'play') return err('The game is not at the guessing part.');
+    if (this.event) return err('Wait for the announcement to finish.');
+    if (!this.turnLeader || this.leaderOf.get(playerId) !== this.turnLeader) return err("It's not your team's turn.");
+    if (playerId === this.turnLeader) return err('You are the leader - just guess!');
+    const text = String(rawText ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, MAX_SUGGESTION_LENGTH);
+    if (!text) return err('Write a suggestion first!');
+    const target = targetId && this.pool.includes(targetId) && targetId !== this.turnLeader ? targetId : null;
+    this.suggestions = [...this.suggestions, { id: ++this.suggestionSeq, fromId: playerId, targetId: target, text }].slice(-20);
+    this.broadcast();
+    return { ok: true };
+  }
+
   giveUp(playerId: string): Result {
     if (this.phase !== 'play') return err('The game is not at the guessing part.');
     if (this.event) return err('Wait for the announcement to finish.');
-    const leader = this.leaderOf.get(playerId);
-    if (!leader || leader !== this.turnLeader) return err("It's not your team's turn.");
-    this.doGiveUp(leader);
+    if (playerId !== this.turnLeader) return err(this.leaderOf.get(playerId) === this.turnLeader ? 'Only your team leader can give up.' : "It's not your team's turn.");
+    this.doGiveUp(playerId);
     this.broadcast();
     return { ok: true };
   }
@@ -482,7 +501,9 @@ export class Room {
           secretName: p.secretName,
           ready: this.ready.has(p.id),
           teamLeaderId: this.phase === 'play' || this.phase === 'gameOver' ? teamLeaderId : null,
-          canGuess: this.phase === 'play' && !this.event && !!teamLeaderId && teamLeaderId === this.turnLeader,
+          canGuess: this.phase === 'play' && !this.event && p.id === this.turnLeader,
+          canSuggest: this.phase === 'play' && !this.event && !!teamLeaderId && teamLeaderId === this.turnLeader && p.id !== this.turnLeader,
+          suggestions: this.phase === 'play' && p.id === this.turnLeader ? this.suggestions : [],
         },
       });
     }
