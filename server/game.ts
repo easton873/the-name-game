@@ -88,6 +88,7 @@ export class Room {
   private event: GuessEvent | null = null;
   private eventSeq = 0;
   private winnerId: string | null = null;
+  private firstPlayerId: string | null = null;
   private suggestions: Suggestion[] = [];
   private suggestionSeq = 0;
 
@@ -228,6 +229,7 @@ export class Room {
     this.event = null;
     this.winnerId = null;
     this.suggestions = [];
+    this.firstPlayerId = null;
     for (const p of this.players.values()) p.secretName = null;
   }
 
@@ -300,6 +302,7 @@ export class Room {
     } else if (this.social) {
       // Social mode: that's all the game does. The players guess among themselves.
       this.phase = 'socialOver';
+      this.firstPlayerId = pick(this.participants); // someone has to start the real game
       this.clearTimer();
     } else {
       this.startPlay();
@@ -491,6 +494,7 @@ export class Room {
       memorize,
       play: this.playState(),
       winner: over ? { id: this.winnerId!, secretName: this.secret(this.winnerId!), teamIds: this.members(this.winnerId!) } : null,
+      firstPlayerId: this.phase === 'socialOver' ? this.firstPlayerId : null,
       recap: over ? this.participants.map((id) => ({ id, secretName: this.secret(id) })) : null,
       you: null,
     };
@@ -501,7 +505,9 @@ export class Room {
     if (this.hostSocketId) {
       // Only the big screen ever sees the name that is currently being shown.
       const name = base.memorize && this.index >= 0 ? this.secret(this.order[this.index]) : null;
-      this.io.to(this.hostSocketId).emit('state', base.memorize ? { ...base, memorize: { ...base.memorize, name } } : base);
+      // Social mode: the big screen can reveal who wrote what if the table needs to settle an argument.
+      const recap = this.phase === 'socialOver' ? this.participants.map((id) => ({ id, secretName: this.secret(id) })) : base.recap;
+      this.io.to(this.hostSocketId).emit('state', { ...base, recap, memorize: base.memorize ? { ...base.memorize, name } : null });
     }
     for (const p of this.players.values()) {
       if (!p.socketId) continue;

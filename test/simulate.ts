@@ -185,10 +185,12 @@ async function social() {
   let hs!: ClientState;
   host.on('state', (st) => (hs = st));
   const bots: S[] = [];
+  let botState!: ClientState;
   for (const n of ['A1', 'B2', 'C3']) {
     const sck = connect();
     assert.ok((await emit(sck, 'player:join', { code: created.code, name: n })).ok);
     bots.push(sck);
+    sck.on('state', (st) => (botState = st));
   }
   await sleep(100);
   host.emit('host:settings', { social: true });
@@ -211,6 +213,11 @@ async function social() {
   await sleep(300);
   assert.equal(hs.phase, 'socialOver', 'no guessing phase in social mode');
   assert.equal(hs.play, null);
+  assert.ok(hs.players.some((p) => p.id === hs.firstPlayerId), 'someone is chosen to go first');
+  assert.equal(hs.recap!.length, 3, 'the big screen can reveal the names');
+  assert.equal(botState.recap, null, 'phones never get the names');
+  assert.ok(!JSON.stringify(botState).includes('Name 0'), 'no names leak to phones');
+  assert.equal(botState.firstPlayerId, hs.firstPlayerId);
   host.emit('host:backToLobby');
   await sleep(100);
   assert.equal(hs.phase, 'lobby');

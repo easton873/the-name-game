@@ -107,7 +107,9 @@ export interface ClientState {
   memorize: MemorizeState | null;
   play: PlayState | null;
   winner: { id: string; secretName: string; teamIds: string[] } | null;
-  /** Everyone's secret name, once the game is over. */
+  /** Social mode: the player who goes first once the game has ended. */
+  firstPlayerId: string | null;
+  /** Everyone's secret name once the game is over (in social mode, only the big screen gets it, for the reveal). */
   recap: { id: string; secretName: string }[] | null;
   you: YouInfo | null;
 }

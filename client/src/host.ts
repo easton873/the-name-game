@@ -266,13 +266,19 @@ function overView(s: ClientState): string {
   </section>`;
 }
 
-function socialOverView(): string {
+function socialOverView(s: ClientState): string {
+  const first = byId(s, s.firstPlayerId);
+  const rows = (s.recap ?? [])
+    .map((r) => `<button class="peek-row" data-peek="${r.id}">${pencilHTML(colorOf(s, r.id))}<span class="who">${nameOf(s, r.id)}</span><span class="arrow">→</span><span class="hid">? ? ?</span><span class="ans">${esc(r.secretName)}</span></button>`)
+    .join('');
   return `<section>
-    <div class="names-sheet sheet">
+    <div class="names-sheet sheet social-end">
       ${pencilHTML('#3fb36b').replace('class="pencil"', 'class="pencil hero"')}
       <div class="wline headline">Now you play!</div>
-      <div class="sub">You've seen every name twice.<br><b>Take turns guessing who wrote what</b> — out loud, around the table.</div>
-      <button class="pbtn green again2" id="again">Back to the lobby</button>
+      <div class="first">${first ? pencilHTML(first.color) : ''}<span class="lbl">Who goes first?</span><b>${esc(first?.name ?? '?')}</b></div>
+      <div class="sub">You've seen every name twice. <b>Take turns guessing who wrote what</b> — out loud, around the table.</div>
+      <div class="peek"><div class="peek-title">Settling an argument? Peek at the answers:</div><div class="peek-grid">${rows}</div></div>
+      <div class="peek-btns"><button class="pbtn blue" id="revealAll">Reveal all the names</button><button class="pbtn green" id="again">Back to the lobby</button></div>
     </div>
   </section>`;
 }
@@ -354,8 +360,18 @@ function render() {
         stage.innerHTML = s.play?.event ? eventView(s, s.play.event) : turnView(s);
         break;
       case 'socialOver':
-        stage.innerHTML = socialOverView();
+        stage.innerHTML = socialOverView(s);
         $('#again')?.addEventListener('click', () => socket.emit('host:backToLobby'));
+        // Names stay hidden until the host clicks: one at a time, or all at once.
+        const rowsEl = [...stage.querySelectorAll<HTMLElement>('.peek-row')];
+        const all = $<HTMLButtonElement>('#revealAll')!;
+        const sync = () => (all.textContent = rowsEl.every((r) => r.classList.contains('on')) ? 'Hide all the names' : 'Reveal all the names');
+        rowsEl.forEach((r) => r.addEventListener('click', () => (r.classList.toggle('on'), sync())));
+        all.addEventListener('click', () => {
+          const show = !rowsEl.every((r) => r.classList.contains('on'));
+          rowsEl.forEach((r) => r.classList.toggle('on', show));
+          sync();
+        });
         break;
       case 'gameOver':
         stage.innerHTML = overView(s);
