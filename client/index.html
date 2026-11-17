@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>The Name Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Schoolbell&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="landing">
+    <div class="titleblock sheet">
+      <div class="wline small">The</div>
+      <div class="wline big">Name Game</div>
+    </div>
+    <p class="tag">Write a secret name. Remember them all. Be the last one standing.</p>
+    <a class="pbtn host" href="/host.html">Host a game <small>on the big screen</small></a>
+    <form id="join" class="join">
+      <input id="code" maxlength="4" placeholder="ROOM CODE" autocapitalize="characters" autocomplete="off" />
+      <button class="pbtn green" type="submit">Join a game</button>
+    </form>
+    <div class="deco" aria-hidden="true"></div>
+  </main>
+  <script type="module">
+    import './src/theme.css';
+    import './src/landing.css';
+    import { pencilHTML } from './src/common.ts';
+    const colors = ['#f7c21b', '#e5484d', '#3b82f6', '#3fb36b', '#8e5bd6', '#f08c2e'];
+    document.querySelector('.deco').innerHTML = colors.map((c, i) => pencilHTML(c, '--pw:2.2rem;--tilt:' + (-28 + i * 11) + 'deg')).join('');
+    document.getElementById('join').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = document.getElementById('code').value.trim().toUpperCase();
+      location.href = '/play.html' + (code ? '?room=' + encodeURIComponent(code) : '');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+/* ==========================================================================================
+   Pencil & paper theme: early-writing practice sheets.
+   Blue top line, dotted middle line, red bottom line, with pencils everywhere.
+   ========================================================================================== */
+:root {
+  --paper: #fffef8;
+  --paper-2: #f6f1df;
+  --ink: #2f3140; /* graphite */
+  --ink-dim: #6c7084;
+  --rule-blue: #4f8fd6;
+  --rule-mid: #86b0e0;
+  --rule-red: #e0524d;
+  --pencil: #f7c21b; /* classic yellow pencil */
+  --pencil-dark: #c99a00;
+  --eraser: #f4a3a8;
+  --good: #3fa66b;
+  --bad: #e0524d;
+  --font-body: 'Andika', 'Atkinson Hyperlegible', 'Comic Neue', 'Chalkboard SE', 'Comic Sans MS', ui-rounded, system-ui, sans-serif;
+  --font-write: 'Schoolbell', 'Patrick Hand', 'Segoe Print', 'Bradley Hand', 'Chalkboard SE', 'Comic Sans MS', cursive;
+
+  /* One tile = one practice line set: blue top line, dashed midline, red baseline. */
+  --tile-w: 48px;
+  --tile-h: 128px;
+  --ruled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='128' viewBox='0 0 48 128'%3E%3Cline x1='0' y1='16' x2='48' y2='16' stroke='%234f8fd6' stroke-width='2' stroke-opacity='.6'/%3E%3Cline x1='0' y1='64' x2='48' y2='64' stroke='%2386b0e0' stroke-width='2' stroke-opacity='.75' stroke-dasharray='6 6'/%3E%3Cline x1='0' y1='112' x2='48' y2='112' stroke='%23e0524d' stroke-width='2' stroke-opacity='.6'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: var(--ruled);
+  background-size: var(--tile-w) var(--tile-h);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+
+/* A sheet of paper laid over the ruled background (cards, panels, modals). */
+.sheet {
+  background: var(--paper);
+  border: 2.5px solid var(--ink);
+  border-radius: 14px 4px 16px 5px / 5px 16px 4px 14px; /* hand-cut corners */
+  box-shadow: 4px 5px 0 rgba(47, 49, 64, 0.18);
+}
+
+/* ---- a single practice line with text written on it -------------------------------------
+   Height is --lh. Lines sit at 12.5% (blue), 50% (dotted), 87.5% (red); the text baseline
+   is nudged onto the red line. */
+.wline {
+  --lh: 4.5rem;
+  position: relative;
+  height: var(--lh);
+  line-height: var(--lh);
+  font-family: var(--font-write);
+  font-size: calc(var(--lh) * 0.62);
+  white-space: nowrap;
+  color: var(--ink);
+  background:
+    linear-gradient(var(--rule-blue), var(--rule-blue)) 0 12.5% / 100% 2px no-repeat,
+    linear-gradient(90deg, var(--rule-mid) 0 8px, transparent 8px 16px) 0 50% / 16px 2px repeat-x,
+    linear-gradient(var(--rule-red), var(--rule-red)) 0 87.5% / 100% 2px no-repeat;
+  background-color: var(--paper);
+  padding-top: calc(var(--lh) * 0.12);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- pencils ---------------------------------------------------------------------------- */
+.pencil { display: inline-block; width: var(--pw, 1.6rem); flex: none; transform: rotate(var(--tilt, 35deg)); transform-origin: 50% 50%; filter: drop-shadow(1.5px 2px 0 rgba(47, 49, 64, 0.2)); }
+.pencil svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* ---- big chunky pencil-ish buttons ------------------------------------------------------ */
+.pbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.6em;
+  padding: 0.6em 1.4em; font-family: var(--font-write); font-weight: 400;
+  color: var(--ink); background: var(--pencil);
+  border: 2.5px solid var(--ink);
+  border-radius: 255px 14px 225px 14px / 14px 225px 14px 255px;
+  box-shadow: 0 5px 0 var(--ink);
+  transition: transform 0.06s, box-shadow 0.06s;
+  text-decoration: none;
+}
+.pbtn:hover:not(:disabled) { transform: translateY(-1px); }
+.pbtn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+.pbtn.green { background: #9ed8b0; }
+.pbtn.blue { background: #a9cdf2; }
+.pbtn.ghost { background: var(--paper); }
+.pbtn:disabled { background: var(--paper-2); color: var(--ink-dim); border-style: dashed; box-shadow: none; cursor: not-allowed; }
+
+/* Timer ring, drawn in pencil */
+.timer { position: relative; display: grid; place-items: center; font-family: var(--font-write); }
+.timer svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer circle { fill: var(--paper); stroke-width: 3.2; }
+.timer .track { stroke: var(--paper-2); }
+.timer .arc { fill: none; stroke: var(--rule-blue); stroke-linecap: round; stroke-dasharray: 100.5; stroke-dashoffset: calc(100.5 * (1 - var(--frac, 1))); transition: stroke-dashoffset 0.25s linear; }
+.timer.urgent .arc { stroke: var(--rule-red); }
+
+@keyframes pop { from { transform: scale(0) rotate(-12deg); opacity: 0; } }
+@keyframes bob { 50% { transform: translateY(-0.35em); } }
+@keyframes scribble { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }

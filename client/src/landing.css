@@ -1,0 +1,15 @@
+.landing { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; text-align: center; }
+.titleblock { padding: 18px 34px 14px; transform: rotate(-1.5deg); width: min(560px, 100%); }
+.titleblock .wline.small { --lh: 56px; text-align: left; font-size: 38px; }
+.titleblock .wline.big { --lh: 120px; font-size: clamp(56px, 14vw, 88px); }
+.tag { color: var(--ink-dim); font-size: 19px; max-width: 30ch; line-height: 1.4; }
+.pbtn.host { flex-direction: column; gap: 2px; width: min(420px, 100%); font-size: 30px; padding: 14px 20px 12px; }
+.pbtn.host small { font-family: var(--font-body); font-size: 14px; opacity: 0.7; }
+.join { display: flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; }
+.join .pbtn { width: min(420px, 100%); font-size: 28px; }
+.join input { width: min(420px, 100%); padding: 12px; background: var(--paper); border: 2.5px dashed var(--ink); border-radius: 12px; color: var(--ink); font-family: var(--font-write); font-size: 34px; text-align: center; letter-spacing: 8px; outline: none; text-transform: uppercase; }
+.join input:focus { border-style: solid; border-color: var(--rule-blue); }
+.deco { display: flex; gap: 14px; margin-top: 14px; height: 120px; align-items: flex-start; }
+.deco .pencil { animation: bob 3s ease-in-out infinite; }
+.deco .pencil:nth-child(2n) { animation-delay: -1s; }
+.deco .pencil:nth-child(3n) { animation-delay: -2s; }

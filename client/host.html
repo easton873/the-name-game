@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Name Game – Host</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Schoolbell&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="host">
+    <div class="hud">
+      <div class="hud-code" id="hudCode"></div>
+      <div id="hudTimer" hidden></div>
+    </div>
+    <main id="stage"></main>
+    <div id="strip" class="strip" hidden></div>
+    <div id="conn" class="conn" hidden>Connection lost – trying to reconnect…</div>
+  </div>
+  <script type="module" src="/src/host.ts"></script>
+</body>
+</html>
