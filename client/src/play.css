@@ -33,7 +33,7 @@ button { touch-action: manipulation; }
 .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; padding: 12px; }
 .center h2 { font-family: var(--font-write); font-weight: 400; font-size: 34px; line-height: 1.1; }
 .center p { color: var(--ink-dim); font-size: 17px; line-height: 1.4; max-width: 28ch; }
-.center .pencil { --pw: 44px; --tilt: -30deg; animation: bob 2.6s ease-in-out infinite; }
+.center .pencil { --pw: 44px; --tilt: -30deg; }
 .mine { padding: 6px 18px; max-width: 100%; transform: rotate(-1.5deg); }
 .mine .wline { --lh: 70px; font-size: 40px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
